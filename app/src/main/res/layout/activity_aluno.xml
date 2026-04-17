@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background_light">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@color/primary_dark"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="40dp"
+        android:paddingBottom="16dp">
+
+        <!-- Info do aluno -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CARTEIRINHA VIRTUAL"
+                android:textColor="#99FFFFFF"
+                android:textSize="10sp"
+                android:letterSpacing="0.15"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/tvNomeAluno"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nome do Aluno"
+                android:textColor="@android:color/white"
+                android:textSize="17sp"
+                android:fontFamily="sans-serif-medium" />
+
+            <TextView
+                android:id="@+id/tvCursoAluno"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Curso / Turma"
+                android:textColor="#AAFFFFFF"
+                android:textSize="12sp"
+                android:layout_marginTop="2dp" />
+
+        </LinearLayout>
+
+        <!-- Botão sair -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSair"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Sair"
+            android:textSize="12sp"
+            android:textColor="@android:color/white"
+            app:strokeColor="#66FFFFFF"
+            app:strokeWidth="1dp"
+            app:cornerRadius="8dp" />
+
+    </LinearLayout>
+
+    <!-- Card principal QR Code -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="16dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="@color/white">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="24dp">
+
+            <!-- Status ativo -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="20dp"
+                app:cardBackgroundColor="#E8F5E9"
+                app:cardElevation="0dp"
+                android:layout_marginBottom="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="● Carteirinha ativa"
+                    android:textSize="12sp"
+                    android:textColor="#2E7D32"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- QR Code placeholder -->
+            <LinearLayout
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@color/background_light"
+                android:layout_marginBottom="16dp">
+
+                <ImageView
+                    android:id="@+id/ivQrCode"
+                    android:layout_width="180dp"
+                    android:layout_height="180dp"
+                    android:scaleType="fitCenter"
+                    android:contentDescription="QR Code" />
+
+            </LinearLayout>
+
+            <!-- Matrícula -->
+            <TextView
+                android:id="@+id/tvMatricula"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Matrícula: 2024001"
+                android:textSize="13sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="4dp" />
+
+            <!-- Tempo restante -->
+            <TextView
+                android:id="@+id/tvTempoRestante"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Atualiza em 5:00"
+                android:textSize="12sp"
+                android:textColor="@color/text_hint" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Card info da linha -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="16dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="@color/white">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="LINHA"
+                    android:textSize="10sp"
+                    android:textColor="@color/text_hint"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:id="@+id/tvLinhaOnibus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Linha Universitária"
+                    android:textSize="15sp"
+                    android:textColor="@color/text_primary"
+                    android:fontFamily="sans-serif-medium" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="end">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="VALIDADE"
+                    android:textSize="10sp"
+                    android:textColor="@color/text_hint"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:id="@+id/tvValidade"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="2026/4"
+                    android:textSize="15sp"
+                    android:textColor="@color/primary_dark"
+                    android:fontFamily="sans-serif-medium" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Botão atualizar QR -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnAtualizarQr"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:text="Atualizar QR Code"
+        android:textSize="14sp"
+        android:textColor="@android:color/white"
+        app:backgroundTint="@color/primary_dark"
+        app:cornerRadius="10dp" />
+
+</LinearLayout>

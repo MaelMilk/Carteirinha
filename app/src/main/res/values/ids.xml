@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="tvNomeAluno" type="id" />
+    <item name="tvCursoAluno" type="id" />
+    <item name="ivQrCode" type="id" />
+    <item name="tvMatricula" type="id" />
+    <item name="tvTempoRestante" type="id" />
+    <item name="tvLinhaOnibus" type="id" />
+    <item name="tvValidade" type="id" />
+    <item name="btnAtualizarQr" type="id" />
+    <item name="btnSairAdmin" type="id" />
+    <item name="tvTotalAtivos" type="id" />
+    <item name="tvTotalPendentes" type="id" />
+    <item name="tvTotalEmbarques" type="id" />
+    <item name="tabLayout" type="id" />
+    <item name="rvAlunos" type="id" />
+    <item name="main" type="id" />
+    <item name="previewView" type="id" />
+</resources>

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "475100402135",
+    "project_id": "carteirinhauni",
+    "storage_bucket": "carteirinhauni.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:475100402135:android:25bad15da1cf1f55f0bb92",
+        "android_client_info": {
+          "package_name": "com.example.carteirinha"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKKrz4EVCBsHDuGnp42UkSqBQxsWhNgI8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
