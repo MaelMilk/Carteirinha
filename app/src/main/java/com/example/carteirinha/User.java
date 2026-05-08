@@ -2,6 +2,7 @@ package com.example.carteirinha;
 
 public class User {
 
+    public String uid;
     public String nome;
     public String email;
     public String curso;

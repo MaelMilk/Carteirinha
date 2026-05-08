@@ -2,6 +2,9 @@ package com.example.carteirinha;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -10,6 +13,8 @@ import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.Query;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +26,12 @@ public class AdminActivity extends AppCompatActivity {
 
     FirebaseFirestore db;
     RecyclerView rvAlunos;
+
+    // Contadores do topo
+    TextView tvTotalAtivos, tvTotalPendentes, tvTotalEmbarques;
+
+    // Listener para limpar ao sair
+    ListenerRegistration listenerAtual;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +46,11 @@ public class AdminActivity extends AppCompatActivity {
         tabLayout = findViewById(R.id.tabLayout);
         rvAlunos = findViewById(R.id.rvAlunos);
 
+        // Contadores
+        tvTotalAtivos = findViewById(R.id.tvTotalAtivos);
+        tvTotalPendentes = findViewById(R.id.tvTotalPendentes);
+        tvTotalEmbarques = findViewById(R.id.tvTotalEmbarques);
+
         // Botão sair
         btnSairAdmin.setOnClickListener(v -> {
             FirebaseAuth.getInstance().signOut();
@@ -48,107 +64,117 @@ public class AdminActivity extends AppCompatActivity {
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
+                if (listenerAtual != null) listenerAtual.remove();
 
                 switch (tab.getPosition()) {
-
-                    case 0:
-                        carregarPendentes();
-                        break;
-
-                    case 1:
-                        carregarAtivos();
-                        break;
-
-                    case 2:
-                        carregarEmbarques();
-                        break;
+                    case 0: carregarPendentes(); break;
+                    case 1: carregarAtivos(); break;
+                    case 2: carregarEmbarques(); break;
                 }
             }
-
             @Override public void onTabUnselected(TabLayout.Tab tab) {}
             @Override public void onTabReselected(TabLayout.Tab tab) {}
         });
 
-        // 🔥 PRIMEIRA CARGA AO ABRIR A TELA
+        // Monitorar contadores em tempo real (sempre ativo)
+        iniciarMonitoramentoContadores();
+
+        // 🔥 PRIMEIRA CARGA
         carregarPendentes();
     }
 
-    // =========================
-    // PENDENTES
-    // =========================
-    private void carregarPendentes() {
+    private void iniciarMonitoramentoContadores() {
+        // Ativos
+        db.collection("usuarios").whereEqualTo("status", "ativo")
+                .addSnapshotListener((value, error) -> {
+                    if (value != null) tvTotalAtivos.setText(String.valueOf(value.size()));
+                });
 
-        db.collection("usuarios")
+        // Pendentes
+        db.collection("usuarios").whereEqualTo("status", "pendente")
+                .addSnapshotListener((value, error) -> {
+                    if (value != null) tvTotalPendentes.setText(String.valueOf(value.size()));
+                });
+
+        // Embarques (Geral)
+        db.collection("checkins")
+                .addSnapshotListener((value, error) -> {
+                    if (value != null) tvTotalEmbarques.setText(String.valueOf(value.size()));
+                });
+    }
+
+    private void carregarPendentes() {
+        if (listenerAtual != null) listenerAtual.remove();
+
+        listenerAtual = db.collection("usuarios")
                 .whereEqualTo("status", "pendente")
-                .get()
-                .addOnSuccessListener(query -> {
+                .addSnapshotListener((value, error) -> {
+                    if (value == null) return;
 
                     List<User> lista = new ArrayList<>();
-
-                    for (DocumentSnapshot doc : query) {
+                    for (DocumentSnapshot doc : value) {
                         User u = doc.toObject(User.class);
-                        lista.add(u);
+                        if (u != null) {
+                            u.uid = doc.getId(); // Vincula o ID do documento
+                            lista.add(u);
+                        }
                     }
-
                     rvAlunos.setAdapter(new UserAdapter(lista, this::aprovarUsuario));
                 });
     }
 
-    // =========================
-    // APROVAR USUÁRIO
-    // =========================
     private void aprovarUsuario(User user) {
+        if (user.uid == null) return;
 
-        db.collection("usuarios")
-                .whereEqualTo("email", user.email)
-                .get()
-                .addOnSuccessListener(query -> {
-
-                    for (DocumentSnapshot doc : query) {
-                        doc.getReference().update("status", "ativo");
-                    }
-
-                    carregarPendentes(); // atualiza lista
-                });
+        db.collection("usuarios").document(user.uid)
+                .update("status", "ativo")
+                .addOnSuccessListener(unused -> 
+                    Toast.makeText(this, "Usuário " + user.nome + " aprovado!", Toast.LENGTH_SHORT).show()
+                )
+                .addOnFailureListener(e -> 
+                    Toast.makeText(this, "Erro ao aprovar: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
     }
 
-    // =========================
-    // ATIVOS
-    // =========================
     private void carregarAtivos() {
+        if (listenerAtual != null) listenerAtual.remove();
 
-        db.collection("usuarios")
+        listenerAtual = db.collection("usuarios")
                 .whereEqualTo("status", "ativo")
-                .get()
-                .addOnSuccessListener(query -> {
+                .addSnapshotListener((value, error) -> {
+                    if (value == null) return;
 
                     List<User> lista = new ArrayList<>();
-
-                    for (DocumentSnapshot doc : query) {
-                        lista.add(doc.toObject(User.class));
+                    for (DocumentSnapshot doc : value) {
+                        User u = doc.toObject(User.class);
+                        if (u != null) {
+                            u.uid = doc.getId();
+                            lista.add(u);
+                        }
                     }
-
                     rvAlunos.setAdapter(new UserAdapter(lista, null));
                 });
     }
 
-    // =========================
-    // EMBARQUES
-    // =========================
     private void carregarEmbarques() {
+        if (listenerAtual != null) listenerAtual.remove();
 
-        db.collection("checkins")
-                .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
-                .get()
-                .addOnSuccessListener(query -> {
+        listenerAtual = db.collection("checkins")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .addSnapshotListener((value, error) -> {
+                    if (value == null) return;
 
                     List<Checkin> lista = new ArrayList<>();
-
-                    for (DocumentSnapshot doc : query) {
+                    for (DocumentSnapshot doc : value) {
                         lista.add(doc.toObject(Checkin.class));
                     }
-
                     rvAlunos.setAdapter(new CheckinAdapter(lista));
                 });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (listenerAtual != null) listenerAtual.remove();
     }
 }

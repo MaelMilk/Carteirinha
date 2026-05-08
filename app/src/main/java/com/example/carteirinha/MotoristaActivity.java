@@ -6,6 +6,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
@@ -18,6 +20,7 @@ public class MotoristaActivity extends AppCompatActivity {
 
     MaterialButton btnSairMotorista, btnEscanear;
     MaterialButton btnConfirmarEmbarque, btnNegarEmbarque;
+    RecyclerView rvEmbarquesMotorista;
     FirebaseFirestore db;
 
     @Override
@@ -31,6 +34,11 @@ public class MotoristaActivity extends AppCompatActivity {
         btnEscanear = findViewById(R.id.btnEscanear);
         btnConfirmarEmbarque = findViewById(R.id.btnConfirmarEmbarque);
         btnNegarEmbarque = findViewById(R.id.btnNegarEmbarque);
+        rvEmbarquesMotorista = findViewById(R.id.rvEmbarquesMotorista);
+
+        rvEmbarquesMotorista.setLayoutManager(new LinearLayoutManager(this));
+
+        carregarUltimosEmbarques();
 
         // Botão sair
         btnSairMotorista.setOnClickListener(v -> {
@@ -164,6 +172,22 @@ public class MotoristaActivity extends AppCompatActivity {
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "Erro ao registrar check-in", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void carregarUltimosEmbarques() {
+        db.collection("checkins")
+                .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                .limit(10) // Mostrar apenas os 10 últimos
+                .addSnapshotListener((query, error) -> {
+                    if (error != null) return;
+                    if (query != null) {
+                        java.util.List<Checkin> lista = new java.util.ArrayList<>();
+                        for (com.google.firebase.firestore.DocumentSnapshot doc : query) {
+                            lista.add(doc.toObject(Checkin.class));
+                        }
+                        rvEmbarquesMotorista.setAdapter(new CheckinAdapter(lista));
+                    }
                 });
     }
 }
