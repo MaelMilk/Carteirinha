@@ -6,6 +6,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
@@ -19,7 +20,7 @@ import com.google.firebase.firestore.Query;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AdminActivity extends AppCompatActivity {
+public class AdminActivity extends AppCompatActivity implements UserAdapter.OnUserActionListener {
 
     MaterialButton btnSairAdmin;
     TabLayout tabLayout;
@@ -45,6 +46,7 @@ public class AdminActivity extends AppCompatActivity {
         btnSairAdmin = findViewById(R.id.btnSairAdmin);
         tabLayout = findViewById(R.id.tabLayout);
         rvAlunos = findViewById(R.id.rvAlunos);
+        rvAlunos.setLayoutManager(new LinearLayoutManager(this));
 
         // Contadores
         tvTotalAtivos = findViewById(R.id.tvTotalAtivos);
@@ -119,20 +121,37 @@ public class AdminActivity extends AppCompatActivity {
                             lista.add(u);
                         }
                     }
-                    rvAlunos.setAdapter(new UserAdapter(lista, this::aprovarUsuario));
+                    rvAlunos.setAdapter(new UserAdapter(lista, true, this));
                 });
     }
 
-    private void aprovarUsuario(User user) {
+    @Override
+    public void onAceitar(User user) {
         if (user.uid == null) return;
 
         db.collection("usuarios").document(user.uid)
                 .update("status", "ativo")
-                .addOnSuccessListener(unused -> 
-                    Toast.makeText(this, "Usuário " + user.nome + " aprovado!", Toast.LENGTH_SHORT).show()
+                .addOnSuccessListener(unused ->
+                        Toast.makeText(this, "Usuário " + user.nome + " aprovado!", Toast.LENGTH_SHORT).show()
                 )
-                .addOnFailureListener(e -> 
-                    Toast.makeText(this, "Erro ao aprovar: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, "Erro ao aprovar: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
+    }
+
+    @Override
+    public void onNegar(User user) {
+        if (user.uid == null) return;
+
+        // Opção: Deletar o usuário ou mudar status para "negado"
+        // Vamos deletar para limpar o banco, ou você pode mudar para "negado" se preferir manter histórico
+        db.collection("usuarios").document(user.uid)
+                .delete()
+                .addOnSuccessListener(unused ->
+                        Toast.makeText(this, "Cadastro de " + user.nome + " recusado.", Toast.LENGTH_SHORT).show()
+                )
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, "Erro ao recusar: " + e.getMessage(), Toast.LENGTH_SHORT).show()
                 );
     }
 
@@ -152,7 +171,7 @@ public class AdminActivity extends AppCompatActivity {
                             lista.add(u);
                         }
                     }
-                    rvAlunos.setAdapter(new UserAdapter(lista, null));
+                    rvAlunos.setAdapter(new UserAdapter(lista, false, null));
                 });
     }
 
