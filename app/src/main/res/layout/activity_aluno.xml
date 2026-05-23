@@ -18,6 +18,19 @@
         android:paddingTop="40dp"
         android:paddingBottom="16dp">
 
+        <!-- Foto do aluno -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/ivFotoPerfil"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginEnd="16dp"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_user_placeholder"
+            app:shapeAppearanceOverlay="@style/CircleImage"
+            app:strokeColor="#4DFFFFFF"
+            app:strokeWidth="2dp" />
+
         <!-- Info do aluno -->
         <LinearLayout
             android:layout_width="0dp"
@@ -38,7 +51,7 @@
                 android:id="@+id/tvNomeAluno"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Nome do Aluno"
+                android:text="Carregando..."
                 android:textColor="@android:color/white"
                 android:textSize="17sp"
                 android:fontFamily="sans-serif-medium" />

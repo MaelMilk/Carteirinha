@@ -9,6 +9,7 @@ public class User {
     public String matricula;
     public String tipo;
     public String status;
+    public String fotoUrl;
 
     public User() {}
 

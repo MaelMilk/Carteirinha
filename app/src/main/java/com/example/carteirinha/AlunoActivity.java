@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.button.MaterialButton;
@@ -19,13 +20,13 @@ public class AlunoActivity extends AppCompatActivity {
 
     MaterialButton btnSair, btnAtualizarQr;
     TextView tvNomeAluno, tvCursoAluno, tvMatricula, tvTempoRestante;
-    ImageView ivQrCode;
+    ImageView ivQrCode, ivFotoPerfil;
 
     FirebaseAuth auth;
     FirebaseFirestore db;
 
     Handler handler = new Handler();
-    long tempoRestante = 300; // 5 minutos
+    long tempoRestante = 120; // 2 minutos (Segurança aumentada)
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +37,7 @@ public class AlunoActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
 
         ivQrCode = findViewById(R.id.ivQrCode);
+        ivFotoPerfil = findViewById(R.id.ivFotoPerfil);
         tvTempoRestante = findViewById(R.id.tvTempoRestante);
         btnSair = findViewById(R.id.btnSair);
         btnAtualizarQr = findViewById(R.id.btnAtualizarQr);
@@ -57,7 +59,7 @@ public class AlunoActivity extends AppCompatActivity {
 
         btnAtualizarQr.setOnClickListener(v -> {
             gerarNovoQR();
-            tempoRestante = 300;
+            tempoRestante = 120;
         });
     }
 
@@ -77,10 +79,18 @@ public class AlunoActivity extends AppCompatActivity {
                         String nome = document.getString("nome");
                         String curso = document.getString("curso");
                         String matricula = document.getString("matricula");
+                        String fotoUrl = document.getString("fotoUrl");
 
                         tvNomeAluno.setText(nome);
                         tvCursoAluno.setText(curso);
                         tvMatricula.setText("Matrícula: " + matricula);
+
+                        if (fotoUrl != null && !fotoUrl.isEmpty()) {
+                            Glide.with(this)
+                                    .load(fotoUrl)
+                                    .placeholder(R.drawable.ic_user_placeholder)
+                                    .into(ivFotoPerfil);
+                        }
                     }
                 });
     }
@@ -99,7 +109,7 @@ public class AlunoActivity extends AppCompatActivity {
 
             ivQrCode.setImageBitmap(bitmap);
 
-            tempoRestante = 300; // reset tempo
+            tempoRestante = 120; // reset tempo (2 minutos)
 
         } catch (Exception e) {
             e.printStackTrace();

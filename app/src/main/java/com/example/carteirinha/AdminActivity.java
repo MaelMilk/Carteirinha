@@ -31,8 +31,8 @@ public class AdminActivity extends AppCompatActivity implements UserAdapter.OnUs
     // Contadores do topo
     TextView tvTotalAtivos, tvTotalPendentes, tvTotalEmbarques;
 
-    // Listener para limpar ao sair
-    ListenerRegistration listenerAtual;
+    // Listeners para limpar ao sair
+    ListenerRegistration listenerAtual, listenerAtivos, listenerPendentes, listenerEmbarques;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,28 +81,59 @@ public class AdminActivity extends AppCompatActivity implements UserAdapter.OnUs
         // Monitorar contadores em tempo real (sempre ativo)
         iniciarMonitoramentoContadores();
 
-        // 🔥 PRIMEIRA CARGA
+
         carregarPendentes();
     }
 
     private void iniciarMonitoramentoContadores() {
         // Ativos
-        db.collection("usuarios").whereEqualTo("status", "ativo")
+        listenerAtivos = db.collection("usuarios").whereEqualTo("status", "ativo")
                 .addSnapshotListener((value, error) -> {
+                    if (error != null) {
+                        android.util.Log.e("AdminActivity", "Erro ao monitorar ativos", error);
+                        return;
+                    }
                     if (value != null) tvTotalAtivos.setText(String.valueOf(value.size()));
                 });
 
         // Pendentes
-        db.collection("usuarios").whereEqualTo("status", "pendente")
+        listenerPendentes = db.collection("usuarios").whereEqualTo("status", "pendente")
                 .addSnapshotListener((value, error) -> {
+                    if (error != null) {
+                        android.util.Log.e("AdminActivity", "Erro ao monitorar pendentes", error);
+                        return;
+                    }
                     if (value != null) tvTotalPendentes.setText(String.valueOf(value.size()));
                 });
 
-        // Embarques (Geral)
-        db.collection("checkins")
+        // Total de Embarques HOJE (Contagem de todos os Check-ins do dia)
+        long inicioDia = getInicioDoDia();
+        listenerEmbarques = db.collection("checkins")
+                .whereGreaterThanOrEqualTo("timestamp", inicioDia)
                 .addSnapshotListener((value, error) -> {
-                    if (value != null) tvTotalEmbarques.setText(String.valueOf(value.size()));
+                    if (error != null) {
+                        android.util.Log.e("AdminActivity", "Erro ao monitorar embarques", error);
+                        return;
+                    }
+                    if (value != null) {
+                        int totalCheckinsHoje = 0;
+                        for (DocumentSnapshot doc : value) {
+                            if ("Check-in".equals(doc.getString("tipo"))) {
+                                totalCheckinsHoje++;
+                            }
+                        }
+                        tvTotalEmbarques.setText(String.valueOf(totalCheckinsHoje));
+                    }
                 });
+    }
+
+    private long getInicioDoDia() {
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
+        cal.set(java.util.Calendar.MINUTE, 0);
+        cal.set(java.util.Calendar.SECOND, 0);
+        cal.set(java.util.Calendar.MILLISECOND, 0);
+        return cal.getTimeInMillis();
     }
 
     private void carregarPendentes() {
@@ -195,5 +226,8 @@ public class AdminActivity extends AppCompatActivity implements UserAdapter.OnUs
     protected void onDestroy() {
         super.onDestroy();
         if (listenerAtual != null) listenerAtual.remove();
+        if (listenerAtivos != null) listenerAtivos.remove();
+        if (listenerPendentes != null) listenerPendentes.remove();
+        if (listenerEmbarques != null) listenerEmbarques.remove();
     }
 }

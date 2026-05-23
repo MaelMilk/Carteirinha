@@ -5,11 +5,7 @@ plugins {
 
 android {
     namespace = "com.example.carteirinha"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.carteirinha"
@@ -56,4 +52,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-storage")
+
+    // Glide
+    implementation("com.github.bumptech.glide:glide:4.16.0")
 }

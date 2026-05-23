@@ -10,6 +10,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+import com.bumptech.glide.Glide;
+
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.VH> {
 
     private List<User> list;
@@ -29,12 +31,14 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.VH> {
 
     public class VH extends RecyclerView.ViewHolder {
         TextView nome, curso;
+        android.widget.ImageView foto;
         View btnAceitar, btnNegar, layoutBotoes;
 
         public VH(View v) {
             super(v);
             nome = v.findViewById(R.id.tvNomeItem);
             curso = v.findViewById(R.id.tvCursoItem);
+            foto = v.findViewById(R.id.ivUserItem);
             btnAceitar = v.findViewById(R.id.btnAceitar);
             btnNegar = v.findViewById(R.id.btnNegar);
             layoutBotoes = v.findViewById(R.id.layoutBotoes);
@@ -54,6 +58,16 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.VH> {
         User u = list.get(position);
         holder.nome.setText(u.nome);
         holder.curso.setText(u.curso);
+
+        // Carregar foto com Glide
+        if (u.fotoUrl != null && !u.fotoUrl.isEmpty()) {
+            Glide.with(holder.itemView.getContext())
+                    .load(u.fotoUrl)
+                    .placeholder(R.drawable.ic_user_placeholder)
+                    .into(holder.foto);
+        } else {
+            holder.foto.setImageResource(R.drawable.ic_user_placeholder);
+        }
 
         if (mostrarBotoes) {
             holder.layoutBotoes.setVisibility(View.VISIBLE);
