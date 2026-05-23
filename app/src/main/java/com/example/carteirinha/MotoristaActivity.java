@@ -116,27 +116,10 @@ public class MotoristaActivity extends AppCompatActivity {
 
     private void processarLeituraQR(String conteudo) {
         try {
-            // O conteúdo é um JSON vindo da AlunoActivity
-            // Ex: { "uid": "abc...", "timestamp": 123... }
-
-            String uid = "";
-            long timestampCode = 0;
-
-            // Extrair UID
-            if (conteudo.contains("\"uid\": \"")) {
-                int start = conteudo.indexOf("\"uid\": \"") + 8;
-                int end = conteudo.indexOf("\"", start);
-                uid = conteudo.substring(start, end);
-            }
-
-            // Extrair Timestamp
-            if (conteudo.contains("\"timestamp\": ")) {
-                int start = conteudo.indexOf("\"timestamp\": ") + 13;
-                int end = conteudo.indexOf(" ", start);
-                if (end == -1) end = conteudo.indexOf("}", start);
-                String tsStr = conteudo.substring(start, end).trim();
-                timestampCode = Long.parseLong(tsStr);
-            }
+            // ✅ Parse seguro com org.json
+            org.json.JSONObject json = new org.json.JSONObject(conteudo);
+            String uid = json.getString("uid");
+            long timestampCode = json.getLong("timestamp");
 
             if (uid.isEmpty()) {
                 Toast.makeText(this, "QR Code inválido", Toast.LENGTH_SHORT).show();
@@ -146,7 +129,7 @@ public class MotoristaActivity extends AppCompatActivity {
             // --- VALIDAÇÃO DE TEMPO (3 MINUTOS) ---
             long agora = System.currentTimeMillis();
             long diferenca = agora - timestampCode;
-            long tresMinutos = 3 * 60 * 1000; // Margem de 1 min sobre os 2 min do QR
+            long tresMinutos = 3 * 60 * 1000L; 
 
             if (diferenca > tresMinutos) {
                 Toast.makeText(this, "ERRO: QR Code expirado!", Toast.LENGTH_LONG).show();
@@ -158,7 +141,7 @@ public class MotoristaActivity extends AppCompatActivity {
             final String finalUid = uid;
             final long finalTimestampCode = timestampCode;
 
-            // 1. Verificar se o QR já foi lido
+            // 1. Verificar se o QR já foi lido (Evita duplicidade por erro ou foto do QR)
             db.collection("checkins")
                     .whereEqualTo("qrTimestamp", finalTimestampCode)
                     .get()
@@ -166,26 +149,32 @@ public class MotoristaActivity extends AppCompatActivity {
                         if (!queryDocumentSnapshots.isEmpty()) {
                             Toast.makeText(this, "ERRO: Este QR Code já foi utilizado!", Toast.LENGTH_LONG).show();
                         } else {
-                            // 2. BUSCA POR TURNO: Verifica o estado do aluno no turno atual
-                            long inicioTurno = getInicioDoTurno();
+                            // 2. BUSCA SIMPLIFICADA: Busca os últimos registros do aluno e filtra no código Java
+                            // Isso elimina a necessidade de índices compostos manuais que demoram a ativar
                             db.collection("checkins")
                                     .whereEqualTo("userId", finalUid)
-                                    .whereGreaterThanOrEqualTo("timestamp", inicioTurno)
-                                    .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
-                                    .limit(1)
                                     .get()
                                     .addOnSuccessListener(ultimosCheckins -> {
                                         String ultimoTipo = "";
                                         long ultimoTs = 0;
-                                        if (!ultimosCheckins.isEmpty()) {
-                                            ultimoTipo = ultimosCheckins.getDocuments().get(0).getString("tipo");
-                                            ultimoTs = ultimosCheckins.getDocuments().get(0).getLong("timestamp");
+                                        long inicioTurno = getInicioDoTurno();
+
+                                        // Filtra manualmente o registro mais recente DESTE turno (pós 17h ou hoje cedo)
+                                        for (com.google.firebase.firestore.DocumentSnapshot doc : ultimosCheckins) {
+                                            Long ts = doc.getLong("timestamp");
+                                            String tipo = doc.getString("tipo");
+                                            if (ts != null && ts >= inicioTurno) {
+                                                if (ts > ultimoTs) {
+                                                    ultimoTs = ts;
+                                                    ultimoTipo = tipo;
+                                                }
+                                            }
                                         }
 
                                         final String statusUltimoAcesso = ultimoTipo;
                                         final long finalUltimoTs = ultimoTs;
 
-                                        // 3. Buscar dados do aluno e validar
+                                        // 3. Buscar dados do aluno e validar status
                                         db.collection("usuarios").document(finalUid).get()
                                                 .addOnSuccessListener(documentSnapshot -> {
                                                     if (documentSnapshot.exists()) {
@@ -197,22 +186,22 @@ public class MotoristaActivity extends AppCompatActivity {
                                                             return;
                                                         }
 
-                                                        // --- LÓGICA AUTOMÁTICA POR TURNO ---
+                                                        // --- LÓGICA AUTOMÁTICA DE CHECK-IN/OUT ---
                                                         String tipoAcao;
-                                                        // No turno da noite (18h-22h), a janela é de até 6 horas
-                                                        long janelaTurno = 6 * 60 * 60 * 1000; 
+                                                        long janelaTurno = 6 * 60 * 60 * 1000; // 6 horas
                                                         long agoraLocal = System.currentTimeMillis();
 
+                                                        // Se ele já fez Check-in recentemente (mesmo turno), agora é Check-out
                                                         if ("Check-in".equals(statusUltimoAcesso) && (agoraLocal - finalUltimoTs) < janelaTurno) {
                                                             tipoAcao = "Check-out";
-                                                            switchModo.setChecked(true);
                                                         } else {
                                                             tipoAcao = "Check-in";
-                                                            switchModo.setChecked(false);
                                                         }
-                                                        // ------------------------------------
                                                         
-                                                        // Preencher card de resultado
+                                                        // Atualiza o switch visual
+                                                        switchModo.setChecked("Check-out".equals(tipoAcao));
+                                                        
+                                                        // Preencher o card com dados do Firestore
                                                         tvNomeAlunoScan.setText(nomeAluno);
                                                         tvMatriculaScan.setText("Matrícula: " + (documentSnapshot.contains("matricula") ? documentSnapshot.getString("matricula") : "---"));
                                                         tvCursoScan.setText(documentSnapshot.getString("curso"));
@@ -231,13 +220,24 @@ public class MotoristaActivity extends AppCompatActivity {
                                                     } else {
                                                         exibirErroScan("ERRO", "Aluno não cadastrado!");
                                                     }
+                                                })
+                                                .addOnFailureListener(e -> {
+                                                    Log.e("SCAN_ERROR", "Erro ao buscar aluno", e);
+                                                    exibirErroScan("ERRO", "Falha ao buscar dados");
                                                 });
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Log.e("SCAN_ERROR", "Erro na consulta de histórico", e);
+                                        Toast.makeText(this, "Erro de Banco: " + e.getMessage(), Toast.LENGTH_LONG).show();
                                     });
                         }
                     });
 
+        } catch (org.json.JSONException e) {
+            Log.e("QR_ERROR", "JSON inválido: " + conteudo, e);
+            exibirErroScan("ERRO", "QR Code inválido");
         } catch (Exception e) {
-            Log.e("QR_ERROR", "Erro ao processar QR", e);
+            Log.e("QR_ERROR", "Erro inesperado", e);
             exibirErroScan("ERRO", "Falha ao ler QR Code");
         }
     }
@@ -259,23 +259,11 @@ public class MotoristaActivity extends AppCompatActivity {
         cal.set(java.util.Calendar.SECOND, 0);
         cal.set(java.util.Calendar.MILLISECOND, 0);
 
-        // Turno Noite: Janela das 17h até meia-noite
         if (horaAtual >= 17) {
             cal.set(java.util.Calendar.HOUR_OF_DAY, 17);
-        } 
-        // Turno Manhã/Tarde: Resto do dia
-        else {
+        } else {
             cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
         }
-        return cal.getTimeInMillis();
-    }
-
-    private long getInicioDoDia() {
-        java.util.Calendar cal = java.util.Calendar.getInstance();
-        cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
-        cal.set(java.util.Calendar.MINUTE, 0);
-        cal.set(java.util.Calendar.SECOND, 0);
-        cal.set(java.util.Calendar.MILLISECOND, 0);
         return cal.getTimeInMillis();
     }
 
@@ -303,11 +291,7 @@ public class MotoristaActivity extends AppCompatActivity {
                             String nome = documentSnapshot.getString("nome");
                             if (nome != null) {
                                 int hora = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
-                                String saudacao;
-                                if (hora >= 5 && hora < 12) saudacao = "Bom dia";
-                                else if (hora >= 12 && hora < 18) saudacao = "Boa tarde";
-                                else saudacao = "Boa noite";
-                                
+                                String saudacao = (hora >= 5 && hora < 12) ? "Bom dia" : (hora >= 12 && hora < 18) ? "Boa tarde" : "Boa noite";
                                 tvNomeMotorista.setText(saudacao + ", " + nome);
                             }
                         }
@@ -320,14 +304,10 @@ public class MotoristaActivity extends AppCompatActivity {
         long agora = System.currentTimeMillis();
         long seisHorasEmMillis = 6 * 60 * 60 * 1000;
 
-        // Monitorar check-ins do turno atual
         listenerContadores = db.collection("checkins")
                 .whereGreaterThanOrEqualTo("timestamp", inicioTurno)
                 .addSnapshotListener((query, error) -> {
-                    if (error != null) {
-                        Log.e("MotoristaActivity", "Erro nos contadores", error);
-                        return;
-                    }
+                    if (error != null) return;
                     if (query != null) {
                         int entradasAtivas = 0;
                         int totalTurno = 0;
@@ -336,23 +316,16 @@ public class MotoristaActivity extends AppCompatActivity {
                         for (com.google.firebase.firestore.DocumentSnapshot doc : query) {
                             String tipo = doc.getString("tipo");
                             Long ts = doc.getLong("timestamp");
-
                             if (ts == null) continue;
 
                             if ("Check-in".equals(tipo)) {
                                 totalTurno++;
-                                // Janela de 6h para o turno da noite
-                                if ((agora - ts) < seisHorasEmMillis) {
-                                    entradasAtivas++;
-                                }
+                                if ((agora - ts) < seisHorasEmMillis) entradasAtivas++;
                             } else if ("Check-out".equals(tipo)) {
                                 saidasTurno++;
                             }
                         }
-
-                        int lotacaoAtual = entradasAtivas - saidasTurno;
-                        if (lotacaoAtual < 0) lotacaoAtual = 0;
-
+                        int lotacaoAtual = Math.max(0, entradasAtivas - saidasTurno);
                         tvContadorAFecho.setText(String.valueOf(lotacaoAtual));
                         tvContadorHoje.setText(String.valueOf(totalTurno));
                     }
@@ -360,11 +333,15 @@ public class MotoristaActivity extends AppCompatActivity {
     }
 
     private void carregarUltimosEmbarques() {
+        // Esta busca ordena por timestamp DESC, o que exige um índice simples automático.
         listenerUltimosEmbarques = db.collection("checkins")
                 .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
-                .limit(10) // Mostrar apenas os 10 últimos
+                .limit(10)
                 .addSnapshotListener((query, error) -> {
-                    if (error != null) return;
+                    if (error != null) {
+                        Log.e("MotoristaActivity", "Erro ao carregar lista", error);
+                        return;
+                    }
                     if (query != null) {
                         java.util.List<Checkin> lista = new java.util.ArrayList<>();
                         for (com.google.firebase.firestore.DocumentSnapshot doc : query) {

@@ -14,7 +14,11 @@ import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class AlunoActivity extends AppCompatActivity {
 
@@ -26,7 +30,7 @@ public class AlunoActivity extends AppCompatActivity {
     FirebaseFirestore db;
 
     Handler handler = new Handler();
-    long tempoRestante = 120; // 2 minutos (Segurança aumentada)
+    long tempoRestante = 120;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,16 +106,19 @@ public class AlunoActivity extends AppCompatActivity {
             String uid = auth.getCurrentUser().getUid();
             long timestamp = System.currentTimeMillis();
 
-            String conteudo = "{ \"uid\": \"" + uid + "\", \"timestamp\": " + timestamp + " }";
+            // ✅ JSON seguro via JSONObject
+            JSONObject json = new JSONObject();
+            json.put("uid", uid);
+            json.put("timestamp", timestamp);
+            String conteudo = json.toString();
 
             BarcodeEncoder encoder = new BarcodeEncoder();
             Bitmap bitmap = encoder.encodeBitmap(conteudo, BarcodeFormat.QR_CODE, 400, 400);
-
             ivQrCode.setImageBitmap(bitmap);
 
-            tempoRestante = 120; // reset tempo (2 minutos)
+            tempoRestante = 120;
 
-        } catch (Exception e) {
+        } catch (JSONException | WriterException e) {
             e.printStackTrace();
         }
     }
@@ -120,12 +127,10 @@ public class AlunoActivity extends AppCompatActivity {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-
                 tempoRestante--;
 
                 int minutos = (int) (tempoRestante / 60);
                 int segundos = (int) (tempoRestante % 60);
-
                 tvTempoRestante.setText("Atualiza em " + String.format("%d:%02d", minutos, segundos));
 
                 if (tempoRestante <= 0) {
