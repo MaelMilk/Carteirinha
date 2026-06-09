@@ -17,13 +17,15 @@
         android:padding="12dp"
         android:gravity="center_vertical">
 
-        <!-- Círculo de Status (Entrada/Saída) -->
-        <View
-            android:id="@+id/viewStatusIndicator"
-            android:layout_width="12dp"
-            android:layout_height="12dp"
+        <!-- Foto do Aluno na Lista -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/ivItemFoto"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_marginEnd="12dp"
-            android:background="@drawable/circle_indicator" />
+            android:scaleType="centerCrop"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
+            android:src="@drawable/ic_user_placeholder" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -41,6 +43,14 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/tvItemMatricula"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Matrícula: 000000"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <TextView
                 android:id="@+id/tvItemTipo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -49,14 +59,29 @@
                 android:textSize="13sp" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvItemHora"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="14:30"
-            android:textColor="@color/primary_dark"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:gravity="end"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvItemHora"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="14:30"
+                android:textColor="@color/primary_dark"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <!-- Círculo de Status (Entrada/Saída) -->
+            <View
+                android:id="@+id/viewStatusIndicator"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_marginTop="4dp"
+                android:background="@drawable/circle_indicator" />
+        </LinearLayout>
 
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

@@ -201,22 +201,24 @@ public class MotoristaActivity extends AppCompatActivity {
                                                         // Atualiza o switch visual
                                                         switchModo.setChecked("Check-out".equals(tipoAcao));
                                                         
+                                                        String matricula = documentSnapshot.contains("matricula") ? documentSnapshot.getString("matricula") : "---";
+                                                        String fotoUrl = documentSnapshot.contains("fotoUrl") ? documentSnapshot.getString("fotoUrl") : "";
+
                                                         // Preencher o card com dados do Firestore
                                                         tvNomeAlunoScan.setText(nomeAluno);
-                                                        tvMatriculaScan.setText("Matrícula: " + (documentSnapshot.contains("matricula") ? documentSnapshot.getString("matricula") : "---"));
+                                                        tvMatriculaScan.setText("Matrícula: " + matricula);
                                                         tvCursoScan.setText(documentSnapshot.getString("curso"));
                                                         tvStatusScan.setText(tipoAcao + " REGISTRADO");
                                                         tvStatusScan.setTextColor(android.graphics.Color.parseColor("#2E7D32"));
                                                         
-                                                        if (documentSnapshot.contains("fotoUrl")) {
-                                                            String fotoUrl = documentSnapshot.getString("fotoUrl");
-                                                            if (fotoUrl != null && !fotoUrl.isEmpty()) {
-                                                                Glide.with(MotoristaActivity.this).load(fotoUrl).placeholder(R.drawable.ic_user_placeholder).into(ivFotoAlunoScan);
-                                                            }
+                                                        if (!fotoUrl.isEmpty()) {
+                                                            Glide.with(MotoristaActivity.this).load(fotoUrl).placeholder(R.drawable.ic_user_placeholder).into(ivFotoAlunoScan);
+                                                        } else {
+                                                            ivFotoAlunoScan.setImageResource(R.drawable.ic_user_placeholder);
                                                         }
 
                                                         cardResultado.setVisibility(android.view.View.VISIBLE);
-                                                        registrarAcao(finalUid, nomeAluno, finalTimestampCode, tipoAcao);
+                                                        registrarAcao(finalUid, nomeAluno, matricula, fotoUrl, finalTimestampCode, tipoAcao);
                                                     } else {
                                                         exibirErroScan("ERRO", "Aluno não cadastrado!");
                                                     }
@@ -267,9 +269,9 @@ public class MotoristaActivity extends AppCompatActivity {
         return cal.getTimeInMillis();
     }
 
-    private void registrarAcao(String uid, String nome, long qrTimestamp, String tipo) {
+    private void registrarAcao(String uid, String nome, String matricula, String fotoUrl, long qrTimestamp, String tipo) {
         long agora = System.currentTimeMillis();
-        Checkin novoCheckin = new Checkin(uid, nome, tipo, agora, qrTimestamp);
+        Checkin novoCheckin = new Checkin(uid, nome, matricula, fotoUrl, tipo, agora, qrTimestamp);
 
         db.collection("checkins")
                 .add(novoCheckin)

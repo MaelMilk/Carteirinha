@@ -57,24 +57,35 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAceitar"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="32dp"
                 android:text="Aceitar"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 android:backgroundTint="#2E7D32"
-                app:cornerRadius="8dp"
-                android:layout_marginEnd="8dp" />
+                app:cornerRadius="16dp"
+                android:layout_marginEnd="6dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnNegar"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="32dp"
                 android:text="Negar"
-                android:textSize="12sp"
-                android:backgroundTint="#D32F2F"
-                app:cornerRadius="8dp"
+                android:textSize="11sp"
+                android:textColor="#D32F2F"
+                app:strokeColor="#D32F2F"
+                app:strokeWidth="1dp"
                 app:icon="@android:drawable/ic_menu_close_clear_cancel"
-                app:iconGravity="textStart"
-                android:padding="8dp" />
+                app:iconTint="#D32F2F"
+                app:iconSize="14dp"
+                app:cornerRadius="16dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="12dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp" />
 
         </LinearLayout>
 

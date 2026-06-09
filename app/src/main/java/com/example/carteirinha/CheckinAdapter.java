@@ -17,21 +17,24 @@ import java.util.Locale;
 public class CheckinAdapter extends RecyclerView.Adapter<CheckinAdapter.VH> {
 
     private List<Checkin> list;
-    private SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+    private SimpleDateFormat sdf = new SimpleDateFormat("dd/MM HH:mm", Locale.getDefault());
 
     public CheckinAdapter(List<Checkin> list) {
         this.list = list;
     }
 
     public class VH extends RecyclerView.ViewHolder {
-        TextView tvNome, tvTipo, tvHora;
+        TextView tvNome, tvMatricula, tvTipo, tvHora;
+        com.google.android.material.imageview.ShapeableImageView ivFoto;
         View indicator;
 
         public VH(View v) {
             super(v);
             tvNome = v.findViewById(R.id.tvItemNome);
+            tvMatricula = v.findViewById(R.id.tvItemMatricula);
             tvTipo = v.findViewById(R.id.tvItemTipo);
             tvHora = v.findViewById(R.id.tvItemHora);
+            ivFoto = v.findViewById(R.id.ivItemFoto);
             indicator = v.findViewById(R.id.viewStatusIndicator);
         }
     }
@@ -49,8 +52,20 @@ public class CheckinAdapter extends RecyclerView.Adapter<CheckinAdapter.VH> {
         Checkin c = list.get(position);
 
         holder.tvNome.setText(c.getNomeAluno());
+        holder.tvMatricula.setText("Matrícula: " + (c.getMatricula() != null ? c.getMatricula() : "---"));
         holder.tvTipo.setText(c.getTipo());
         holder.tvHora.setText(sdf.format(new Date(c.getTimestamp())));
+
+        // Carregar foto na lista
+        if (c.getFotoUrl() != null && !c.getFotoUrl().isEmpty()) {
+            com.bumptech.glide.Glide.with(holder.itemView.getContext())
+                    .load(c.getFotoUrl())
+                    .placeholder(R.drawable.ic_user_placeholder)
+                    .circleCrop()
+                    .into(holder.ivFoto);
+        } else {
+            holder.ivFoto.setImageResource(R.drawable.ic_user_placeholder);
+        }
 
         if ("Check-in".equals(c.getTipo())) {
             holder.indicator.getBackground().setTint(Color.parseColor("#4CAF50")); // Verde
